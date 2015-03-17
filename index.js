@@ -48,7 +48,11 @@ var Script = exports.Script = function NodeScript (code) {
     this.code = code;
 };
 
-Script.prototype.runInContext = function (context) {
+Script.prototype.runInContext = function (context, return_result) {
+    if (return_result == null || typeof return_result == 'undefined') {
+        return_result = true;
+    }
+
     if (!(context instanceof Context)) {
         throw new TypeError("needs a 'context' argument.");
     }
@@ -96,18 +100,22 @@ Script.prototype.runInContext = function (context) {
         }
     });
     
-    document.body.removeChild(iframe);
+    if (return_result) {
+        document.body.removeChild(iframe);
     
-    return res;
+        return res;
+    } else {
+        return iframe;
+    }
 };
 
 Script.prototype.runInThisContext = function () {
     return eval(this.code); // maybe...
 };
 
-Script.prototype.runInNewContext = function (context) {
+Script.prototype.runInNewContext = function (context, return_result) {
     var ctx = Script.createContext(context);
-    var res = this.runInContext(ctx);
+    var res = this.runInContext(ctx, return_result);
 
     forEach(Object_keys(ctx), function (key) {
         context[key] = ctx[key];
@@ -115,6 +123,7 @@ Script.prototype.runInNewContext = function (context) {
 
     return res;
 };
+
 
 forEach(Object_keys(Script.prototype), function (name) {
     exports[name] = Script[name] = function (code) {
